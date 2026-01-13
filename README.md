@@ -1,70 +1,107 @@
-# Hexadecimal Keypad Scanner and Encoder – Verilog
+# Hexadecimal Keypad Interface (Basys-3 FPGA)
 
 ## Overview
-This project implements a **4×4 hexadecimal keypad scanner and encoder** using Verilog. The system detects keypresses from a 16-key matrix and encodes them into 4-bit hexadecimal outputs. The design uses an **FSM-based scanning approach** along with signal synchronization and row-column logic.
+This project implements a **4×4 hexadecimal keypad interface** on the **Basys-3 FPGA board** using **Verilog HDL**.  
+The design scans keypad rows and columns, decodes key presses into a **4-bit hexadecimal value**, and displays the result on the onboard LEDs.
 
-This project demonstrates low-level hardware interfacing and sequential control logic and is verified using a comprehensive testbench.
-
----
-
-## Module Structure
-
-### `hex_keypad.v` – RTL Design (All Modules)
-- **`rowsignal`**  
-  Generates row signals based on current column select lines and pressed key positions (one-hot encoded input).
-
-- **`synchronizer`**  
-  Synchronizes asynchronous row signals to the system clock and ensures clean transitions for FSM logic.
-
-- **`hex_keypad_scanner`**  
-  Main FSM-based module that cycles through columns, detects row activations, and encodes the pressed key into a 4-bit hex value.
+The implementation emphasizes **robust hardware interfacing**, including **clock-domain synchronization** and an **FSM-based keypad scanning mechanism**.
 
 ---
 
-### `hex_keypad_tb.v` – Testbench
-- Simulates one-hot key inputs for all 16 hexadecimal keys (0–F).
-- Loops through each key, applies keypress timing, and monitors encoded outputs.
-- Dumps waveform using `$dumpfile` and `$dumpvars` for GTKWave analysis.
+## Hardware Platform
+
+- **FPGA Board:** Digilent Basys-3 (Artix-7)
+- **Clock:** 100 MHz onboard oscillator
+
+### Inputs
+- 4×4 matrix keypad  
+  - `ROW[3:0]` – Row inputs  
+  - `COL[3:0]` – Column outputs
+- Center push button (`btnC`) used as **reset**
+
+### Outputs
+- Onboard LEDs to display the detected **hexadecimal key**
+- **Valid signal LED** indicating an active key press
 
 ---
 
-## Features
-- **Detects and encodes all 16 keys (0–F)** from a standard 4×4 keypad.
-- **FSM-based control** to sequence column scanning and decode row inputs.
-- Synchronization of asynchronous input signals for stability.
-- Fully modular RTL design with reusable components.
-- Comprehensive **testbench** to validate detection and encoding.
+## Design Architecture
+
+### 1. Top Module  
+**`top_keypad_basys3_nodebounce`**
+
+- Integrates all submodules
+- Connects keypad rows and columns to the scanning logic
+- Displays the decoded **4-bit key value** on LEDs
+- Uses a **synchronized reset** derived from the onboard push button
+- Operates **without debounce** to clearly demonstrate raw keypad scanning behavior
 
 ---
 
-## ▶How to Run
-1. Open `hex_keypad.v` and `hex_keypad_tb.v` in a simulator like EDA Playground or ModelSim.
-2. Set `test_Hex_Keypad` as the top-level module.
-3. Run the simulation and observe `code` and `valid` outputs for each keypress.
-4. Analyze the output waveform using GTKWave.
+### 2. Row Signal Synchronizer
+
+- Uses a **two-stage flip-flop synchronizer**
+- Applied to the **OR-combined row inputs**
+- Prevents **metastability** when asynchronous keypad signals enter the FPGA clock domain
+- Ensures stable key-press detection before scanning begins
 
 ---
 
-## Tools Used
-- **Language**: Verilog HDL  
-- **Simulation**: EDA Playground, GTKWave  
-- **Testbench**: One-hot simulation for all 16 keys
+### 3. Keypad Scanner (FSM-Based)
+
+- Implements a **finite state machine (FSM)** to:
+  - Sequentially drive each column line
+  - Read row inputs to detect the pressed key
+- Generates:
+  - A **4-bit hexadecimal code**
+  - A **valid signal** during an active key press
+- Scanning continues until the key is released, preventing repeated false detections
 
 ---
 
-## Project Learning Objectives
-- Understand **matrix keypad interfacing** using RTL design.
-- Practice **FSM-based design** for scanning and encoding.
-- Gain exposure to **synchronization**, **testbench writing**, and **waveform validation**.
+### 4. Hexadecimal Key Mapping
+
+- Decodes key presses based on **row–column combinations**
+- Supports all **16 hexadecimal keys (0–F)**
+- Implemented using **combinational logic** for fast decoding
+
+---
+
+### 5. Optional Debounce Module
+
+- A **parameterized debounce module** is included for future use
+- Designed for **mechanical key stabilization** using a counter-based approach
+- Can be enabled if **single-pulse, stable key detection** is required
+
+---
+
+## Key Features
+
+- FSM-based keypad scanning
+- Metastability-safe input synchronization
+- Real-time hexadecimal key decoding
+- Modular and readable Verilog design
+- Fully compatible with **Basys-3 FPGA hardware constraints**
+
+---
+
+##  Applications
+
+- FPGA-based human–machine interfaces
+- Embedded input systems
+- Digital design and FSM learning projects
+- Verilog HDL practice with real hardware
+
+---
+
+##  Notes
+
+- External pull-down resistors (or internal pull-downs) should be used on keypad row inputs
+- Debounce logic is intentionally excluded in the top module for clarity and educational purposes
 
 ---
 
 ## Author
-**Sarath Srinivasan**  
-B.Tech in Electrical Engineering  
-Aspiring VLSI Engineer
+**Sarath Srinivasan**
 
----
 
-## Tags
-`verilog` `FSM` `digital-design` `keypad-scanner` `encoder` `hexadecimal` `rtl` `testbench`
